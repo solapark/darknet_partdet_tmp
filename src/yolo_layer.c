@@ -10,7 +10,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes)
+//layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes)
+layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes, int part, int whole, int whole_classes)
 {
     int i;
     layer l = { (LAYER_TYPE)0 };
@@ -68,6 +69,9 @@ layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int 
         l.delta = (float*)calloc(batch * l.outputs, sizeof(float));
     }
 #endif
+    l.part = part;
+    l.whole = whole;
+    l.whole_classes = whole_classes;
 
     fprintf(stderr, "yolo\n");
     srand(time(0));
@@ -238,9 +242,12 @@ void forward_yolo_layer(const layer l, network_state state)
                     for(t = 0; t < l.max_boxes; ++t){
                         box truth = float_to_box_stride(state.truth + t*(4 + 1) + b*l.truths, 1);
                         int class_id = state.truth[t*(4 + 1) + b*l.truths + 4];
-                        if (class_id >= l.classes) {
-                            printf(" Warning: in txt-labels class_id=%d >= classes=%d in cfg-file. In txt-labels class_id should be [from 0 to %d] \n", class_id, l.classes, l.classes - 1);
-                            getchar();
+                        //if (class_id >= l.classes) {
+                        if ( (!l.part && !l.whole && class_id >= l.classes) || 
+                            (l.whole && class_id >= l.whole_classes) || 
+                            (l.part && (class_id < l.whole_classes || class_id >= l.classes + l.whole_classes )) ) {
+                            //printf(" Warning: in txt-labels class_id=%d >= classes=%d in cfg-file. In txt-labels class_id should be [from 0 to %d] \n", class_id, l.classes, l.classes - 1);
+                            //getchar();
                             continue; // if label contains class_id more than number of classes in the cfg-file
                         }
                         if(!truth.x) break;  // continue;
@@ -272,8 +279,12 @@ void forward_yolo_layer(const layer l, network_state state)
         for(t = 0; t < l.max_boxes; ++t){
             box truth = float_to_box_stride(state.truth + t*(4 + 1) + b*l.truths, 1);
             int class_id = state.truth[t*(4 + 1) + b*l.truths + 4];
-            if (class_id >= l.classes) continue; // if label contains class_id more than number of classes in the cfg-file
-
+            //if (class_id >= l.classes) continue; // if label contains class_id more than number of classes in the cfg-file
+            if ( (!l.part && !l.whole && class_id >= l.classes) || 
+                (l.whole && class_id >= l.whole_classes) || 
+                (l.part && (class_id < l.whole_classes || class_id >= l.classes + l.whole_classes )) ) {
+                continue;
+            }
             if(!truth.x) break;  // continue;
             float best_iou = 0;
             int best_n = 0;

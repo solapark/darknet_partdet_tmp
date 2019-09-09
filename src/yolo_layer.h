@@ -8,7 +8,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes);
+//layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes);
+layer make_yolo_layer(int batch, int w, int h, int n, int total, int *mask, int classes, int max_boxes, int part, int whole, int whole_classes);
 void forward_yolo_layer(const layer l, network_state state);
 void backward_yolo_layer(const layer l, network_state state);
 void resize_yolo_layer(layer *l, int w, int h);

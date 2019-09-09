@@ -296,7 +296,11 @@ layer parse_yolo(list *options, size_params params)
     char *a = option_find_str(options, "mask", 0);
     int *mask = parse_yolo_mask(a, &num);
     int max_boxes = option_find_int_quiet(options, "max", 90);
-    layer l = make_yolo_layer(params.batch, params.w, params.h, num, total, mask, classes, max_boxes);
+    int part = option_find_int(options, "part", 0);
+    int whole = option_find_int(options, "whole", 0);
+    int whole_classes = option_find_int(options, "whole_classes", 0);
+    //layer l = make_yolo_layer(params.batch, params.w, params.h, num, total, mask, classes, max_boxes);
+    layer l = make_yolo_layer(params.batch, params.w, params.h, num, total, mask, classes, max_boxes, part, whole, whole_classes);
     if (l.outputs != params.inputs) {
         printf("Error: l.outputs == params.inputs \n");
         printf("filters= in the [convolutional]-layer doesn't correspond to classes= or mask= in [yolo]-layer \n");
